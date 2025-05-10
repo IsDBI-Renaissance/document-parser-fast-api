@@ -1,7 +1,9 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
-import fitz  
+import fitz  # PyMuPDF
 import tempfile
+import uvicorn
+import os
 
 app = FastAPI()
 
@@ -10,8 +12,8 @@ async def extract_text_from_pdf(file: UploadFile = File(...)):
     if file.content_type != "application/pdf":
         raise HTTPException(status_code=400, detail="File must be a PDF.")
 
-    # Save uploaded PDF temporarily
     try:
+        # Save uploaded PDF temporarily
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
             contents = await file.read()
             tmp.write(contents)
@@ -29,3 +31,8 @@ async def extract_text_from_pdf(file: UploadFile = File(...)):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error reading PDF: {str(e)}")
+
+# Only runs this if executed directly (not when imported as a module)
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
